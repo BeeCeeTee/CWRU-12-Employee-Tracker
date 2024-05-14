@@ -1,7 +1,6 @@
 const { Pool } = require('pg');
 const inquirer = require('inquirer');
 
-// Connect to database
 const pool = new Pool(
   {
     user: 'postgres',
@@ -32,22 +31,29 @@ const question1 = [
   }
 ]
 
-const addEmployee = [
+const addRole = [
   {
     type: 'input',
-    name: 'employee_first_name',
-    message: 'Enter a first name:'
+    name: 'role_title',
+    message: 'Enter role title:'
   },
   {
     type: 'input',
-    name: 'employee_last_name',
-    message: 'Enter a last name:'
+    name: 'role_salary',
+    message: 'Enter a salary number (without any punctuation):'
   },
   {
-    type: 'list',
-    name: 'employee_role',
-    message: 'Select a role:',
-    choices: []
+    type: 'input',
+    name: 'role_dept',
+    message: 'Enter a department for the role:'
+  },
+]
+
+const addDept = [
+  {
+    type: 'input',
+    name: 'dept_name',
+    message: 'Enter the department name:'
   }
 ]
 
@@ -60,21 +66,58 @@ function getAnswers() {
             console.error('Error executing query', err);
             getAnswers();
           } else {
-            console.log('Query result:', res.rows)
-            getAnswers();
+            // pool.query('SELECT * FROM employees JOIN employees e1 ON e1.manager_id = employees.id', (err, res) => {
+
+            // })
           }
         });
       }
 
       if (answers.question_1 === 'Add employee') {
-        inquirer.prompt(addEmployee)
+        pool.query('SELECT title FROM roles')
+        .then(({rows}) => {
+          rows = rows.map((item) => {
+            return item.title
+          })
+        })
+          pool.query('SELECT salary FROM roles')
+          .then(({rows}) => {
+            rows = rows.map((item) => {
+              return item.title
+            })
+          const addEmployee = [
+            {
+              type: 'input',
+              name: 'emp_fname',
+              message: 'Enter a first name:'
+            },
+            {
+              type: 'input',
+              name: 'emp_lname',
+              message: 'Enter a last name:'
+            },
+            {
+              type: 'list',
+              name: 'emp_role',
+              message: 'Select a role:',
+              choices: [rows]
+            },
+            {
+              type: 'list',
+              name: 'emp_manager',
+              message: 'Select a manager:',
+              choices: [rows]
+            }
+          ]
+          inquirer.prompt(addEmployee)
+          })
         .then(answers => {
-          pool.query('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ()', (err, res) => {
+          pool.query('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)',[answers], (err, res) => {
             if (err) {
               console.error('Error executing query', err);
               getAnswers();
             } else {
-              console.log('Query result:', res.rows)
+              console.log('Employee added successfully!');
               getAnswers();
             }
         })
@@ -83,7 +126,17 @@ function getAnswers() {
 
       if (answers.question_1 === 'Update employee role') {
         inquirer.prompt(addEmployee)
-        .then()
+        .then(answers => {
+          pool.query('UPDATE employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)', [answers], (err, res) => {
+            if (err) {
+              console.error('Error executing query', err);
+              getAnswers();
+            } else {
+              console.log('Employee role updated successfully!');
+              getAnswers();
+            }
+        })
+        });
         };
 
       if (answers.question_1 === 'View all roles') {
@@ -92,15 +145,25 @@ function getAnswers() {
             console.error('Error executing query', err);
             getAnswers();
           } else {
-            console.log('Query result:', res.rows)
+            console.table(res.rows)
             getAnswers();
           }
         });
         };
 
       if (answers.question_1 === 'Add role') {
-        inquirer.prompt(addEmployee)
-        .then()
+        inquirer.prompt()
+        .then(answers => {
+          pool.query('INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)', [answers], (err, res) => {
+            if (err) {
+              console.error('Error executing query', err);
+              getAnswers();
+            } else {
+              console.log('Role added successfully!');
+              getAnswers();
+            }
+        })
+        });
         };
 
       if (answers.question_1 === 'View all departments') {
@@ -109,22 +172,36 @@ function getAnswers() {
             console.error('Error executing query', err);
             getAnswers();
           } else {
-            console.log('Query result:', res.rows)
+            console.table(res.rows)
             getAnswers();
           }
         });
         };
 
       if (answers.question_1 === 'Add department') {
-        inquirer.prompt(addEmployee)
-        .then()
+        inquirer.prompt(addDept)
+        .then(({dept_name}) => {
+          console.log(dept_name);
+          pool.query('INSERT INTO departments (dept_name) VALUES ($1)', [dept_name], (err, res) => {
+            if (err) {
+              console.error('Error executing query', err);
+              getAnswers();
+            } else {
+              console.log('Department added successfully!');
+              getAnswers();
+            }
+        })
+        });
         };
 
       if (answers.question_1 === 'Quit') {
-        inquirer.prompt(addEmployee)
-        .then()
+        console.log('Have a nice day!')
+        process.exit();
         };
     })
   }
 
 getAnswers();
+
+// SELECT * FROM employees JOIN employees e1 ON e1.manager_id = employees.id;
+// SELECT e1.first_name AS manager, employees.first_name, employees.last_name  FROM employees JOIN employees e1 ON e1.manager_id = employees.id;
