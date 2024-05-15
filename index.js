@@ -45,7 +45,8 @@ const addRole = [
   {
     type: 'input',
     name: 'role_dept',
-    message: 'Enter a department for the role:'
+    message: 'Select a department for the role:',
+    choices: []
   },
 ]
 
@@ -57,34 +58,55 @@ const addDept = [
   }
 ]
 
+const updateEmployee = [
+  {
+    type: 'list',
+    name: 'emp_name',
+    message: 'Select an employee to update:',
+    choices: []
+  },
+  {
+    type: 'list',
+    name: 'emp_role',
+    message: 'Select a new role for this employee:',
+    choices: []
+  }
+]
+
 function getAnswers() {
   inquirer.prompt(question1)
     .then(answers => {
+
+      // ** Need to change order, exclude dept id, role id, and manager id, and replace dept id with dept name and manager id with manager name
       if (answers.question_1 === 'View all employees') {
         pool.query('SELECT * FROM roles JOIN employees ON employees.role_id = roles.id', (err, res) => {
           if (err) {
             console.error('Error executing query', err);
             getAnswers();
           } else {
+            console.table(res.rows);
+            getAnswers();
             // pool.query('SELECT * FROM employees JOIN employees e1 ON e1.manager_id = employees.id', (err, res) => {
-
+            // SELECT e1.first_name AS employees.first_name, employees.last_name, manager  FROM employees JOIN employees e1 ON e1.manager_id = employees.id;
             // })
           }
         });
       }
 
+      // *** Quits immediately after Enter a first name prompt
       if (answers.question_1 === 'Add employee') {
-        pool.query('SELECT title FROM roles')
-        .then(({rows}) => {
-          rows = rows.map((item) => {
-            return item.title
-          })
-        })
+        // pool.query('SELECT title FROM roles')
+        // .then(({rows}) => {
+        //   rows = rows.map((item) => {
+        //     return item.title
+        //   })
+        // })
           pool.query('SELECT salary FROM roles')
           .then(({rows}) => {
             rows = rows.map((item) => {
-              return item.title
+              return item.salary
             })
+            console.log('test');
           const addEmployee = [
             {
               type: 'input',
@@ -100,19 +122,21 @@ function getAnswers() {
               type: 'list',
               name: 'emp_role',
               message: 'Select a role:',
-              choices: [rows]
+              choices: rows
             },
             {
               type: 'list',
               name: 'emp_manager',
               message: 'Select a manager:',
-              choices: [rows]
+              choices: rows
             }
           ]
-          inquirer.prompt(addEmployee)
+          console.log('test2');
+          inquirer.prompt(addEmployee).then(() => {
           })
-        .then(answers => {
-          pool.query('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)',[answers], (err, res) => {
+          })
+        .then(({emp_fname}, {emp_lname}, {emp_role}, {emp_manager}) => {
+          pool.query('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)',[emp_fname, emp_lname, emp_role, emp_manager], (err, res) => {
             if (err) {
               console.error('Error executing query', err);
               getAnswers();
@@ -124,8 +148,10 @@ function getAnswers() {
         });
       }
 
+
+      // ** See Add employee first
       if (answers.question_1 === 'Update employee role') {
-        inquirer.prompt(addEmployee)
+        inquirer.prompt(updateEmployee)
         .then(answers => {
           pool.query('UPDATE employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)', [answers], (err, res) => {
             if (err) {
@@ -138,9 +164,10 @@ function getAnswers() {
         })
         });
         };
-
+      
+      // * Need to exclude dept id from table
       if (answers.question_1 === 'View all roles') {
-        pool.query('SELECT * FROM roles', (err, res) => {
+        pool.query('SELECT * FROM roles JOIN departments ON roles.department_id = departments.id', (err, res) => {
           if (err) {
             console.error('Error executing query', err);
             getAnswers();
@@ -151,10 +178,11 @@ function getAnswers() {
         });
         };
 
+      // ** TypeError: Cannot destructure property 'role_salary' of 'undefined' as it is undefined.
       if (answers.question_1 === 'Add role') {
-        inquirer.prompt()
-        .then(answers => {
-          pool.query('INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)', [answers], (err, res) => {
+        inquirer.prompt(addRole)
+        .then(({role_title}, {role_salary}, {role_dept}) => {
+          pool.query('INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)', [role_title, role_salary, role_dept], (err, res) => {
             if (err) {
               console.error('Error executing query', err);
               getAnswers();
@@ -181,7 +209,6 @@ function getAnswers() {
       if (answers.question_1 === 'Add department') {
         inquirer.prompt(addDept)
         .then(({dept_name}) => {
-          console.log(dept_name);
           pool.query('INSERT INTO departments (dept_name) VALUES ($1)', [dept_name], (err, res) => {
             if (err) {
               console.error('Error executing query', err);
@@ -204,4 +231,4 @@ function getAnswers() {
 getAnswers();
 
 // SELECT * FROM employees JOIN employees e1 ON e1.manager_id = employees.id;
-// SELECT e1.first_name AS manager, employees.first_name, employees.last_name  FROM employees JOIN employees e1 ON e1.manager_id = employees.id;
+// SELECT e1.first_name AS employees.first_name, employees.last_name, manager  FROM employees JOIN employees e1 ON e1.manager_id = employees.id;
