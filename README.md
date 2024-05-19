@@ -14,7 +14,7 @@ This project is a back-end employee tracker system with a database and a user-fa
   Since this project is not deployed, but is instead run locally, view the following video for a demonstration:
    <br/><br/>
 
-
+![Recording2024-05-18215013-ezgif com-optimize](https://github.com/BeeCeeTee/CWRU-12-Employee-Tracker/assets/117789057/0958c65b-2162-433e-af9f-e4d5b7192bdf)
 
    <br/><br/>
 ([Back to Top](#table-of-contents))
