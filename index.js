@@ -44,7 +44,8 @@ function getAnswers() {
     .then(answers => {
 
       if (answers.question_1 === 'View all employees') {
-        pool.query('SELECT employees.employees_id, employees.first_name, employees.last_name, title, salary, dept_name, manager.first_name, manager.last_name FROM roles JOIN employees ON employees.role_id = roles.roles_id JOIN departments ON roles.department_id = departments.departments_id JOIN employees manager ON employees.manager_id = manager.employees_id;', (err, res) => {
+        pool.query('SELECT employees_id, first_name, last_name, title, dept_name, salary FROM employees JOIN roles ON employees.role_id = roles.roles_id JOIN departments ON roles.department_id = departments.departments_id; ', (err, res) => {
+          // pool.query('SELECT employees.employees_id, employees.first_name, employees.last_name, title, salary, dept_name, manager.first_name, manager.last_name FROM roles JOIN employees ON employees.role_id = roles.roles_id JOIN departments ON roles.department_id = departments.departments_id JOIN employees manager ON employees.manager_id = manager.employees_id;', (err, res) => {
           if (err) {
             console.error('Error executing query', err);
             getAnswers();
@@ -234,5 +235,4 @@ function getAnswers() {
 
 getAnswers();
 
-// SELECT * FROM employees JOIN employees e1 ON e1.manager_id = employees.id;
-// SELECT e1.first_name AS employees.first_name, employees.last_name, manager  FROM employees JOIN employees e1 ON e1.manager_id = employees.id;
+// SELECT employees.employees_id, employees.first_name, employees.last_name, title, salary, dept_name, manager.first_name, manager.last_name FROM roles JOIN employees ON employees.role_id = roles.roles_id JOIN departments ON roles.department_id = departments.departments_id JOIN employees manager ON employees.manager_id = manager.employees_id;
